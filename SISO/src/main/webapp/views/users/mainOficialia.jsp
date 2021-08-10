@@ -58,6 +58,7 @@
                 <th>Departamento</th>
                 <th>Auxiliar</th>
                 <th>Prioridad</th>
+                <th>Acciones</th>
             </tr>
             </thead>
             <tbody>
@@ -100,6 +101,15 @@
                         </c:if>
                         <c:if test="${ minute.priorityId.namePriority eq 'Normal' }">
                             <label style="background-color: green "><p style="color: white">${ minute.priorityId.namePriority }</p></label>
+                        </c:if>
+                    </td>
+                    <td>
+                        <c:if test="${ minute.attended eq 0 }">
+                            <form action="${context}/ServletRecords" method="get" style="display: inline;">
+                                <input type="hidden" name="action" value="changeDepartment">
+                                <input type="hidden" name="id" value="${ minute.id_minutes}">
+                                <button type="submit" class="btn">Recanalizar </button>
+                            </form>
                         </c:if>
                     </td>
                 </tr>

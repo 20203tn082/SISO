@@ -28,7 +28,13 @@ public class ServletUsers extends HttpServlet {
             request.setAttribute("listDepartment", new DaoDepartment().findDepartment());
             request.getRequestDispatcher("/views/users/register.jsp").forward(request, response);
             break;
-
+            case "assistant":
+                int id = Integer.parseInt(request.getParameter("id"));
+                System.out.println(id);
+                request.setAttribute("idManager", id);
+                request.setAttribute("listAssistant", new DaoUsers().findAllAssitant(Integer.parseInt(request.getParameter("id"))));
+                request.getRequestDispatcher("/views/users/assistants.jsp").forward(request, response);
+            break;
             default:
         }
     }
@@ -159,7 +165,7 @@ public class ServletUsers extends HttpServlet {
 
                 BeanUsers beanUsers3 = new BeanUsers(0, nameUser2, password2, "", "", "","",0, "", null,0,"", null, null);
                 idUser2 = new DaoUsers().findIdByUsername(nameUser2);
-                if (idUser2 != 0){
+                if (idUser2 != 0 && idUser2 != -1){
                     resultado2 = new DaoUsers().findAttempts(idUser2);
                     if (resultado2[0] == 3 && resultado2[1] > 30){
                         new DaoUsers().restartAttempts(idUser2);
@@ -171,6 +177,8 @@ public class ServletUsers extends HttpServlet {
                             if (resultado[3] != 0){
                                 new DaoUsers().increaseAttempts(resultado[0]);
                                 System.out.println("Contraseña incorrecta, el número de intentos que llevas son: " + (resultado2[0] + 1));
+                                request.getRequestDispatcher("/views/users/login.jsp").forward(request, response);
+
                             }else {
                                 new DaoUsers().restartAttempts(resultado[0]);
                                 System.out.println("Contraseña correcta");
@@ -183,6 +191,7 @@ public class ServletUsers extends HttpServlet {
                                     request.getSession().setAttribute("contram2",password2);
                                 }else if(resultado[1] == 2){
                                     request.setAttribute("listMinutes", new DaoRecords().findAllRecordsByManager(resultado[0]));
+                                    request.setAttribute("idManager",resultado[0]);
                                     request.getRequestDispatcher("/views/users/mainManager.jsp").forward(request, response);
                                     request.getSession().setAttribute("usuariom1",nameUser2);
                                     request.getSession().setAttribute("contram1",password2);
@@ -191,9 +200,6 @@ public class ServletUsers extends HttpServlet {
                                     request.getRequestDispatcher("/views/users/mainOficialia.jsp").forward(request, response);
                                     request.getSession().setAttribute("usuariom",nameUser2);
                                     request.getSession().setAttribute("contram",password2);
-                                }else if(resultado[1] == 4){
-                                    request.setAttribute("listMinutes", new DaoRecords().findAllRecords(resultado[0]));
-                                    request.getRequestDispatcher("/views/users/mainAdmin.jsp").forward(request, response);
                                 }else{
                                     request.getRequestDispatcher("/views/users/login.jsp").forward(request, response);
                                 }
@@ -203,24 +209,41 @@ public class ServletUsers extends HttpServlet {
                         }
                     }else if (resultado2[0] == 3 && resultado2[1] >= 0 && resultado2[1] < 31){
                         System.out.println("Estas bloqueado por 30 minutos");
+                        request.getRequestDispatcher("/views/users/login.jsp").forward(request, response);
+
+                    }
+                }else if (idUser2 == -1){
+                    try {
+                        resultado = new DaoUsers().login(beanUsers3);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    if (resultado[3] != 0){
+                        System.out.println("Contraseña incorrecta");
+                        request.getRequestDispatcher("/views/users/login.jsp").forward(request, response);
+
+                    }else {
+                        request.getRequestDispatcher("/views/users/mainAdmin.jsp").forward(request, response);
+
                     }
                 }else {
                     System.out.println("El usuario no existe");
+                    request.getRequestDispatcher("/views/users/login.jsp").forward(request, response);
+
                 }
                 break;
             case "updateAssistant":
                 // do something
+                int idManager1 = Integer.parseInt(request.getParameter("idManager") != null ? request.getParameter("idManager") :"");
                 int[] resultado5 = new int[5];
                 int idUser3 = Integer.parseInt(request.getParameter("id") != null ? request.getParameter("id") :"");
-                String nameUser4 = request.getParameter("nameUser") != null ? request.getParameter("nameUser") : "";
+                String nameUser4 = request.getParameter("nameAssistant") != null ? request.getParameter("nameAssistant") : "";
                 String name4 = request.getParameter("name")!= null ? request.getParameter("name") : "";
                 String lastname14 = request.getParameter("lastname1")!= null ? request.getParameter("lastname1") : "";
                 String lastname24 = request.getParameter("lastname2")!= null ? request.getParameter("lastname2") : "";
-                int departmentId4 = Integer.parseInt(request.getParameter("departmentId")!= null ? request.getParameter("departmentId") : "0");
                 String email4 = request.getParameter("email")!= null ? request.getParameter("email") : "";
 
-                BeanDepartment beanDepartment2 = new BeanDepartment(departmentId4, "", "", "", 0);
-                BeanUsers beanUsers4 = new BeanUsers(idUser3, nameUser4, "",name4, lastname14, lastname24, email4,0, "", null,0 ,"", beanDepartment2, null);
+                BeanUsers beanUsers4 = new BeanUsers(idUser3, nameUser4, "",name4, lastname14, lastname24, email4,0, "", null,0 ,"", null, null);
                 try {
                     resultado5 = new DaoUsers().updateAssistant(beanUsers4);
                     if(resultado5[0]==1){
@@ -247,8 +270,16 @@ public class ServletUsers extends HttpServlet {
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
-                request.setAttribute("listUsers", new DaoUsers().findAllUsers());
-                request.getRequestDispatcher("/views/users/users.jsp").forward(request, response);
+                request.setAttribute("listAssistant", new DaoUsers().findAllAssitant(idManager1));
+                request.getRequestDispatcher("/views/users/assistants.jsp").forward(request, response);
+                break;
+            case "getAssistantById":
+                long id1 = Long.parseLong(request.getParameter("id"));
+                long idManager = Long.parseLong(request.getParameter("idManager"));
+                request.setAttribute("idManager", idManager);
+                request.setAttribute("assistant", new DaoUsers().findAssistantById(id1));
+                request.setAttribute("listDepartment", new DaoDepartment().findDepartment());
+                request.getRequestDispatcher("/views/users/updateAssistant.jsp").forward(request, response);
                 break;
 
             default:

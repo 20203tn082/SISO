@@ -35,13 +35,26 @@ public class ServletRecords extends HttpServlet {
             request.getRequestDispatcher("/views/records/uploadRecord.jsp").forward(request, response);
             break;
             case "assign":
-                request.setAttribute("listAssistant", new DaoUsers().findAllAssitant());
+                //request.setAttribute("listAssistant", new DaoUsers().findAllAssitant());
                 request.getSession().setAttribute("idRecords",request.getParameter("id")!= null ? request.getParameter("id") : "");
                 request.getRequestDispatcher("/views/records/assignRecord.jsp").forward(request, response);
                 break;
             case "records":
                 request.setAttribute("listMinutes", new DaoRecords().findAllRecords());
                 request.getRequestDispatcher("/views/users/mainOficialia.jsp").forward(request, response);
+                break;
+            case "changeDepartment":
+                request.setAttribute("idRecord", Integer.parseInt(request.getParameter("id")));
+                request.setAttribute("listDepartment", new DaoDepartment().findDepartment());
+                request.getRequestDispatcher("/views/records/changeDepartment.jsp").forward(request, response);
+                break;
+            case "reassign":
+                int idManager = Integer.parseInt(request.getParameter("idManager"));
+                request.setAttribute("idRecord", Integer.parseInt(request.getParameter("id")));
+                request.setAttribute("idManager",idManager);
+                request.setAttribute("listAssistant", new DaoUsers().findAllAssitant(idManager));
+                request.getRequestDispatcher("/views/records/reassignRecord.jsp").forward(request, response);
+
                 break;
         }
     }
@@ -139,6 +152,41 @@ public class ServletRecords extends HttpServlet {
                     throwables.printStackTrace();
                 }
                 request.setAttribute("listMinutes", new DaoRecords().findAllRecordsByManager(resultado4[0]));
+                request.getRequestDispatcher("/views/users/mainManager.jsp").forward(request, response);
+                break;
+            case "changeDepartment":
+                int idRecord = Integer.parseInt(request.getParameter("id"));
+                int idDepartment = Integer.parseInt(request.getParameter("departmentId"));
+                if (new DaoRecords().changeDepartment(idRecord, idDepartment)){
+                    System.out.println("Se ha hecho la recanalización correctament");
+                    request.setAttribute("listMinutes", new DaoRecords().findAllRecords());
+                    request.getRequestDispatcher("/views/users/mainOficialia.jsp").forward(request, response);
+
+                }else {
+                    System.out.println("No se realizó la recanalización");
+                }
+                break;
+            case "reassignAssistant":
+                int[] resultado5 = new int[4];
+                int idRecord1 = Integer.parseInt(request.getParameter("id"));
+                int idAssistant = Integer.parseInt(request.getParameter("assistantId"));
+                resultado5 = new DaoRecords().reassignRecord(idRecord1,idAssistant);
+
+                if (resultado5[0] == 1){
+                    System.out.println("Se reasignó correctamente");
+                }else {
+                    if (resultado5[1] == 1){
+                        System.out.println("No existe el oficio");
+                    } else {
+                        if (resultado5[2] ==1){
+                            System.out.println("Ya esta atendido");
+                        }
+                    }
+                    if (resultado5[3] == 1){
+                        System.out.println("El auxiliar no existe");
+                    }
+                }
+                request.setAttribute("listMinutes", new DaoRecords().findAllRecordsByManager(Integer.parseInt(request.getParameter("idManager"))));
                 request.getRequestDispatcher("/views/users/mainManager.jsp").forward(request, response);
                 break;
             default:

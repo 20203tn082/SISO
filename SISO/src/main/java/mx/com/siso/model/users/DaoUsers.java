@@ -67,7 +67,6 @@ public class DaoUsers {
     public List<BeanUsers> findAllUsers(){
         List<BeanUsers> listUsers = new ArrayList<>();
         try {
-            // SELECT * FROM users AS U INNER JOIN persons AS P ON U.idPerson = P.id INNER JOIN roles AS R ON U.idRole = R.id;
             con = ConnectionMySQL.getConnection();
             cstm = con.prepareCall("{call find_users}");
             rs = cstm.executeQuery();
@@ -110,7 +109,6 @@ public class DaoUsers {
     public BeanUsers findUserById(long id){
         BeanUsers beanUsers = null;
         try {
-            // SELECT * FROM users AS U INNER JOIN persons AS P ON U.idPerson = P.id INNER JOIN roles AS R ON U.idRole = R.id;
             con = ConnectionMySQL.getConnection();
             cstm = con.prepareCall("{call find_user_byId(?)}");
             cstm.setLong(1, id);
@@ -332,19 +330,34 @@ public class DaoUsers {
         }
         return flag;
     }
-    public List<BeanUsers> findAllAssitant(){
+    public List<BeanUsers> findAllAssitant(int id){
         List<BeanUsers> listUsers = new ArrayList<>();
         try {
+            System.out.println("El id es: " + id);
             con = ConnectionMySQL.getConnection();
-            cstm = con.prepareCall("{call find_assistant}");
+            cstm = con.prepareCall("{call find_assistant(?)}");
+            cstm.setInt(1, id);
             rs = cstm.executeQuery();
 
-            while(rs.next()){
+            while(rs.next()) {
+                BeanDepartment beanDepartment = new BeanDepartment();
                 BeanUsers beanUsers = new BeanUsers();
+
+                beanDepartment.setIdDepartment(rs.getInt("department_id"));
+                beanDepartment.setNameDepartment(rs.getString("department_name"));
+                beanDepartment.setDescription(rs.getString("description"));
+                beanDepartment.setTelephoneNumber(rs.getString("phone_number"));
+                beanDepartment.setCurrentDepartment(0);
 
                 beanUsers.setId_user(rs.getInt("user_id"));
                 beanUsers.setNameUser(rs.getString("username"));
                 beanUsers.setName(rs.getString("name"));
+                beanUsers.setLastname1(rs.getString("lastname_1"));
+                beanUsers.setLastname2(rs.getString("lastname_2"));
+                beanUsers.setEmail(rs.getString("email"));
+                beanUsers.setCurrentUser(rs.getInt("user_status"));
+                beanUsers.setDepartment_id(beanDepartment);
+
                 listUsers.add(beanUsers);
             }
         }catch (SQLException e){
@@ -422,26 +435,22 @@ public class DaoUsers {
         System.out.println(user.getId_user());
         try{
             con = ConnectionMySQL.getConnection();
-            cstm = con.prepareCall("{call  modify_user(?,?,?,?,?,?,?,?,?,?,?,?)}");
+            cstm = con.prepareCall("{call  modify_assistant(?,?,?,?,?,?,?,?,?,?)}");
             cstm.setInt(1,user.getId_user());
             cstm.setString(2,user.getNameUser() );
             cstm.setString(3, user.getName());
             cstm.setString(4,user.getLastname1());
             cstm.setString(5,user.getLastname2());
             cstm.setString(6, user.getEmail());
-            cstm.setInt(7,user.getDepartment_id().getIdDepartment());
+            cstm.registerOutParameter(7, java.sql.Types.INTEGER);
             cstm.registerOutParameter(8, java.sql.Types.INTEGER);
             cstm.registerOutParameter(9, java.sql.Types.INTEGER);
             cstm.registerOutParameter(10, java.sql.Types.INTEGER);
-            cstm.registerOutParameter(11, java.sql.Types.INTEGER);
-            cstm.registerOutParameter(12, java.sql.Types.INTEGER);
-
             cstm.execute();
-            int errorUser = cstm.getInt(8);
-            int errorName = cstm.getInt(9);
-            int errorEmail = cstm.getInt(10);
-            int errorDepartament = cstm.getInt(11);
-            int succes = cstm.getInt(12);
+            int errorUser = cstm.getInt(7);
+            int errorName = cstm.getInt(8);
+            int errorEmail = cstm.getInt(9);
+            int succes = cstm.getInt(10);
             if(succes==1){
                 resultado[0] = 1;
             }else{
@@ -455,9 +464,6 @@ public class DaoUsers {
                         resultado[3] = 1;
                     }
                 }
-                if(errorDepartament==1){
-                    resultado[4] = 1;
-                }
             }
 
         }catch(SQLException e){
@@ -467,5 +473,39 @@ public class DaoUsers {
         }
         return resultado;
     }
+    public BeanUsers findAssistantById(long id){
+        BeanUsers beanUsers = null;
+        try {
+            con = ConnectionMySQL.getConnection();
+            cstm = con.prepareCall("{call find_assistant_byId(?)}");
+            cstm.setLong(1, id);
+            rs = cstm.executeQuery();
+
+            if(rs.next()){
+                BeanDepartment beanDepartment = new BeanDepartment();
+                beanUsers = new BeanUsers();
+
+                beanDepartment.setIdDepartment(rs.getInt("department_id"));
+                beanDepartment.setNameDepartment(rs.getString("department_name"));
+
+                beanUsers.setId_user(rs.getInt("user_id"));
+                beanUsers.setNameUser(rs.getString("username"));
+                beanUsers.setPasswordUser(rs.getString("user_password"));
+                beanUsers.setName(rs.getString("name"));
+                beanUsers.setLastname1(rs.getString("lastname_1"));
+                beanUsers.setLastname2(rs.getString("lastname_2"));
+                beanUsers.setEmail(rs.getString("email"));
+                beanUsers.setCurrentUser(rs.getInt("user_status"));
+                beanUsers.setDepartment_id(beanDepartment);
+
+            }
+        }catch (SQLException e){
+            logger.error("Ha ocurrido un error: " + e.getMessage());
+        } finally {
+            ConnectionMySQL.closeConnection(con, cstm, rs);
+        }
+        return beanUsers;
+    }
+
 }
 

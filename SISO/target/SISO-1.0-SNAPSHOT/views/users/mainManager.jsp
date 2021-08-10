@@ -19,6 +19,11 @@
 <body>
     <div class="container">
         <a href="${context}/ServletRecords" class="btn btn-success"><i class="fas fa-plus"></i> Agregar oficio</a>
+        <form action="${context}/ServletUsers" method="get">
+            <input type="hidden" name="action" value="assistant">
+            <input type="hidden" name="id" value="${idManager}">
+            <button type="submit" class="btn-outline-info">Listado de auxiliares</button>
+        </form>
         <table class="table table-striped">
             <thead>
             <tr>
@@ -90,7 +95,12 @@
                     </form>
                         </c:if>
                         <c:if test="${minute.userId.id_user ne 0 && minute.userId.id_user ne 0 && minute.attended eq 0}">
-                            <button class="btn btn-outline-primary">Reasignar</button>
+                            <form action="${context}/ServletRecords" method="get" style="display: inline;">
+                                <input type="hidden" name="action" value="reassign">
+                                <input type="hidden" name="id" value="${ minute.id_minutes}">
+                                <input type="hidden" name="idManager" value="${idManager}">
+                                <button type="submit" class="btn btn-outline-primary"> Reasignar</button>
+                            </form>
                         </c:if>
                         <c:if test="${minute.attended eq 1}">
                             <button class="btn btn-outline-primary">Detalle</button>

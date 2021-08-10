@@ -8,10 +8,8 @@ import mx.com.siso.service.ConnectionMySQL;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.lang.reflect.Type;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -208,16 +206,10 @@ public class DaoRecords {
         List<BeanRecords> listMinutes = new ArrayList<>();
         try {
             con = ConnectionMySQL.getConnection();
-            cstm = con.prepareCall("{call view_records(?,?)}");
+            cstm = con.prepareCall("{call find_records_byManager(?)}");
             cstm.setInt(1, idUser);
-            cstm.registerOutParameter(2, java.sql.Types.INTEGER);
             rs = cstm.executeQuery();
-            int errorUser  = cstm.getInt(2);
-            if(errorUser==0){
-                System.out.println("Consulta exitosa");
-            }else{
-                System.out.println("El usuario no existe");
-            }
+
 
             while(rs.next()){
                 BeanUsers beanUsers =new BeanUsers();
@@ -283,5 +275,61 @@ public class DaoRecords {
         }
         return listMinutes;
     }
+    public boolean changeDepartment(int idRecord, int idDepartment){
+        boolean flag =  false;
+        try {
+            con = ConnectionMySQL.getConnection();
+            cstm = con.prepareCall("{call change_department(?,?,?)}");
+            cstm.setInt(1, idRecord);
+            cstm.setInt(2, idDepartment);
+            cstm.registerOutParameter(3, Types.INTEGER);
+            cstm.execute();
+            int success = cstm.getInt(3);
+            if (success == 1){
+                flag = true;
+            }
+        }catch (SQLException e){
+            System.out.println("Se ha encontrado el error" + e.getMessage());
+        }finally {
+            ConnectionMySQL.closeConnection(con,cstm);
+        }
+        return flag;
+    }
+    public int[] reassignRecord(int idRecord, int idAssistant){
+        int[] resultado = new int[4];
+        try {
+            con = ConnectionMySQL.getConnection();
+            cstm = con.prepareCall("{call reassign_record(?,?,?,?,?)}");
+            cstm.setInt(1, idRecord);
+            cstm.setInt(2, idAssistant);
+            cstm.registerOutParameter(3, Types.INTEGER);
+            cstm.registerOutParameter(4, Types.INTEGER);
+            cstm.registerOutParameter(5, Types.INTEGER);
+            cstm.execute();
+            int errorRecord = cstm.getInt(3);
+            int errorAttended = cstm.getInt(4);
+            int errorAssistant = cstm.getInt(5);
+            if (errorRecord == 0 && errorAttended == 0 && errorAssistant == 0){
+                resultado[0] = 1;
+            }else {
+                if (errorRecord == 1){
+                    resultado[1] = 1;
+                } else {
+                    if (errorAttended ==1){
+                        resultado[2] = 1;
+                    }
+                }
+                if (errorAssistant == 1){
+                    resultado[3] = 1;
+                }
+            }
+        }catch (SQLException e){
+            System.out.println("Se ha encontrado el error" + e.getMessage());
+        }finally {
+            ConnectionMySQL.closeConnection(con,cstm);
+        }
+        return resultado;
+    }
+
 
 }
