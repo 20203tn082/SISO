@@ -74,8 +74,12 @@
                         </form>
                         </c:if>
                         <c:if test="${minute.attended eq 1}">
+                            <form action="${context}/ServletResponse" method="post">
+                                <input type="hidden" value="getResponseById" name="action">
+                                <input type="hidden" value="${minute.id_minutes}" name="idRecord">
+                                <button type="submit" class="btn btn-success">Detalles</button>
 
-                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#details"> Detalles</button>
+                            </form>
 
                         </c:if>
                     </td>

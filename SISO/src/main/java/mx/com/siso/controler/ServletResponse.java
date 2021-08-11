@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -45,27 +46,32 @@ public class ServletResponse extends HttpServlet {
                 InputStream inputStream = null;
                 System.out.println(idRecord);
                 System.out.println(comment);
-                    Collection<Part> fileParts = request.getParts().stream().filter(part -> "archivos".equals(part.getName()) && part.getSize() > 0).collect(Collectors.toList());
-                    for (Part filePart : fileParts) {
-                        inputStream  = filePart.getInputStream();
-                        beanResponse_file = new BeanResponse_file(0,inputStream,beanRecords);
-                        try {
-                            resultado = new DaoResponse().createResponse(beanResponse_file);
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                        if(resultado[0] == 1){
-                            System.out.println("Se inserto correctamente");
+                Collection<Part> fileParts = request.getParts().stream().filter(part -> "archivos".equals(part.getName()) && part.getSize() > 0).collect(Collectors.toList());
+                for (Part filePart : fileParts) {
+                    inputStream  = filePart.getInputStream();
+                    int size = inputStream.available();
+                    byte[] bytes = new byte[size];
+                    inputStream.read(bytes);
+                    String file = Base64.getEncoder().encodeToString(bytes);
+                    beanResponse_file = new BeanResponse_file(0,file,beanRecords);
+                    try {
+                        resultado = new DaoResponse().createResponse(beanResponse_file);
+                        flag = true;
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    if(resultado[0] == 1){
+                        System.out.println("Se inserto correctamente");
+                    }else {
+                        if (resultado[1] == 1){
+                            System.out.println("No existe el oficio");
                         }else {
-                            if (resultado[1] == 1){
-                                System.out.println("No existe el oficio");
-                            }else {
-                                if (resultado[2] == 1) {
-                                    System.out.println("El oficio ya esta atendido");
-                                }
+                            if (resultado[2] == 1) {
+                                System.out.println("El oficio ya esta atendido");
                             }
                         }
                     }
+                }
                 try {
                     if (flag){
                         new DaoResponse().changeAttended(beanResponse_file);
@@ -89,6 +95,18 @@ public class ServletResponse extends HttpServlet {
                     e.printStackTrace();
                 }
                 break;
+                case "getResponseById":
+                int id = Integer.parseInt(request.getParameter("idRecord"));
+                request.setAttribute("listResponse", new DaoResponse().findResponse(id));
+                request.getRequestDispatcher("/views/response/listResponse.jsp").forward(request, response);
+                break;
+            case "mostrar":
+                response.setContentType("application/pdf");
+                int responseId = Integer.parseInt(request.getParameter("id") != null ? request.getParameter("id") : "");
+                System.out.println("Id de la respuesta" + responseId);
+                response.getOutputStream().write(Base64.getDecoder().decode(new DaoResponse().findResponseById(responseId)));
+                break;
+
             default:
         }
     }

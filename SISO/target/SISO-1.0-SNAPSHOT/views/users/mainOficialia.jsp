@@ -43,8 +43,8 @@
 </div>
     <div class="container">
         <br>
-        <form action="${context}/ServletDepartments" method="get">
-            <input type="hidden" value="register" name="action">
+        <form action="${context}/ServletRecords" method="get">
+            <input type="hidden" value="upload" name="action">
             <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Agregar oficio</button>
         </form>
         <br>
@@ -104,7 +104,7 @@
                         </c:if>
                     </td>
                     <td>
-                        <c:if test="${ minute.attended eq 0 }">
+                        <c:if test="${ minute.attended eq 0 && minute.userId.id_user eq 0 }">
                             <form action="${context}/ServletRecords" method="get" style="display: inline;">
                                 <input type="hidden" name="action" value="changeDepartment">
                                 <input type="hidden" name="id" value="${ minute.id_minutes}">

@@ -63,12 +63,12 @@ public class DaoRecords {
         }
         return listMinutes;
     }
-
+/*
     public List<BeanRecords> findRecordsByAssistant(int idUser){
         List<BeanRecords> listMinutes = new ArrayList<>();
         try {
             con = ConnectionMySQL.getConnection();
-            cstm = con.prepareCall("{call view_records(?,?)}");
+            cstm = con.prepareCall("{call view(?,?)}");
             cstm.setInt(1, idUser);
             cstm.registerOutParameter(2, java.sql.Types.INTEGER);
             rs = cstm.executeQuery();
@@ -107,7 +107,43 @@ public class DaoRecords {
         }
         return listMinutes;
     }
+*/
+public List<BeanRecords> findRecordsByAssistant(int idUser){
+    List<BeanRecords> listMinutes = new ArrayList<>();
+    try {
+        con = ConnectionMySQL.getConnection();
+        cstm = con.prepareCall("{call find_records_byAssistant(?)}");
+        cstm.setInt(1, idUser);
+        rs = cstm.executeQuery();
 
+        while(rs.next()){
+            BeanUsers beanUsers =new BeanUsers();
+            BeanDepartment beanDepartment = new BeanDepartment();
+            BeanPriority beanPriority = new BeanPriority();
+            BeanRecords beanRecords = new BeanRecords();
+
+            beanPriority.setIdPriority(rs.getInt("priority_id"));
+            beanPriority.setNamePriority(rs.getString("priority_name"));
+            beanDepartment.setIdDepartment(rs.getInt("department_id"));
+            beanDepartment.setNameDepartment(rs.getString("department_name"));
+            beanRecords.setDateChannelling(rs.getTimestamp("channelling_date"));
+            beanRecords.setDateAssignment(rs.getTimestamp("assignment_date"));
+            beanRecords.setId_minutes(rs.getInt("records_id"));
+            beanRecords.setAttended(rs.getInt("attended"));
+            beanRecords.setDepartmentId(beanDepartment);
+            beanRecords.setUserId(beanUsers);
+            beanRecords.setPriorityId(beanPriority);
+
+
+            listMinutes.add(beanRecords);
+        }
+    }catch (SQLException e){
+        System.out.printf("Ha ocurrido un error: " + e.getMessage());
+    } finally {
+        ConnectionMySQL.closeConnection(con, cstm, rs);
+    }
+    return listMinutes;
+}
     public int[] createRecord(BeanRecords minute) throws SQLException {
         int[] resultado = new int[3];
         try {

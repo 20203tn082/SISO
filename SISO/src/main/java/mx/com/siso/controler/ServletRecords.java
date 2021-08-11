@@ -102,7 +102,7 @@ public class ServletRecords extends HttpServlet {
                 } catch (Exception ex) {
                     System.out.println("fichero: "+ ex.getMessage());
                 }
-                List<BeanRecords> listRecords = new DaoRecords().findAllRecords(resultado[0]);
+                List<BeanRecords> listRecords = new DaoRecords().findAllRecords();
                 if (listRecords.size()==0){
                     System.out.println("La consulta no fue exitosa");
                 }else {
